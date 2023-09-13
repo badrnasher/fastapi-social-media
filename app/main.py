@@ -1,58 +1,32 @@
-from fastapi import FastAPI, status, HTTPException
-from pydantic import BaseModel
-from psycopg2.extras import RealDictCursor
-import psycopg2
-import time
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from . import models
+from .database import engine
+from .routers import post, user, auth, vote
+from .config import settings
 
 
-class Post(BaseModel):
-        title: str
-        content: str
+# models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-while True:
-        try:
-                conn = psycopg2.connect(host='localhost', database='fastapi', user='postgres',
-                                        password='badr', cursor_factory=RealDictCursor)
-                cursor = conn.cursor()
-                print("Database connection was succesfull!")
-                break
-        except Exception as error:
-                print("Connecting to database failed")
-                print("Error: ", error)
-                time.sleep(3)
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(post.router)
+app.include_router(user.router)
+app.include_router(auth.router)
+# app.include_router(vote.router)
+
 
 @app.get("/")
-async def root():
-    return {"message": "Welcome to the API"}
-
-@app.get("/posts")
-def get_posts():
-    cursor.execute("SELECT * FROM posts")
-    posts = cursor.fetchall()
-    return posts
-
-
-@app.get("/posts/{post_id}")
-def get_post(post_id: int):
-        cursor.execute("SELECT * FROM posts WHERE id=%s", (post_id,))
-        post = cursor.fetchone()
-        if post:
-                return post
-        else:
-                raise HTTPException(status_code=404, detail="Post not found")
-        
-
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post):
-        cursor.execute("INSERT INTO posts (title, content) VALUES (%s, %s)", (post.title, post.content))
-        conn.commit()
-        return {"message": "Post created successfully"}
-
-@app.put("/posts/{post_id}")
-def update_post(post_id: int, post: Post):
-        cursor.execute("UPDATE posts SET title=%s, content=%s WHERE id=%s", (post.title, post.content, post_id))
-        conn.commit()
-        return {"message": "Post updated successfully"}
-
-
+def root():
+    return {"message": "Hello World pushing out to ubuntu"}
