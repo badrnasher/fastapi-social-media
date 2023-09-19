@@ -36,11 +36,17 @@ def verify_access_token(token: str, credentials_exception):
         id: str = payload.get("user_id")
         if id is None:
             raise credentials_exception
+
+        # Cast the id field to a string before passing it to the TokenData schema.
+        id = str(id)
         token_data = schemas.TokenData(id=id)
+
     except JWTError:
         raise credentials_exception
 
     return token_data
+
+
 
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):

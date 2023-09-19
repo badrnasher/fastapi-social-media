@@ -45,7 +45,7 @@ def create_posts(post: schemas.PostCreate, db: Session = Depends(get_db), curren
 
     # conn.commit()
 
-    new_post = models.Post(owner_id=current_user.id, **post.dict())
+    new_post = models.Post(owner_id=current_user.id, **dict(post))
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -115,7 +115,8 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Not authorized to perform requested action")
 
-    post_query.update(updated_post.dict(), synchronize_session=False)
+
+    post_query.update(updated_post.model_dump(), synchronize_session=False)
 
     db.commit()
 
